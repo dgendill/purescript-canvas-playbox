@@ -1,0 +1,17 @@
+{
+  "name": "canvas",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "watch": "pulp --watch build --to dist/bundle.js",
+    "server": "pulp server",
+    "build": "pulp build --to dist/bundle.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
