@@ -14,9 +14,8 @@ foreign function.
 foreign import canvasToEventTarget :: CanvasElement -> EventTarget
 ```
 
-So then you can use use [addEventListener](https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.EventTarget#v:addEventListener) from DOM.Event.EventTarget to bind an event listener to the Canvas element.
-
-https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.MouseEvent#v:eventToMouseEvent
+So then you can use use [addEventListener](https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.EventTarget#v:addEventListener) from DOM.Event.EventTarget to bind an event listener to the Canvas element and
+get [MouseEvent data](https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.MouseEvent#v:eventToMouseEvent).
 
 ![Preview](/img/preview.jpg)
 
