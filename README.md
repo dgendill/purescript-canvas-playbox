@@ -30,3 +30,8 @@ npm run server
 ```
 
 Then point your browser to http://localhost:1337/dist/
+
+# History
+
+Tag 1.0.0 - Able to draw shapes on the canvas and listen for clicks
+Tag 1.1.0 - Animating rectangle size with setInterval and requestAnimationFrame
