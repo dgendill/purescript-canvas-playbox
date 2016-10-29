@@ -17,7 +17,7 @@ foreign import canvasToEventTarget :: CanvasElement -> EventTarget
 So then you can use use [addEventListener](https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.EventTarget#v:addEventListener) from DOM.Event.EventTarget to bind an event listener to the Canvas element and
 get [MouseEvent data](https://pursuit.purescript.org/packages/purescript-dom/2.2.1/docs/DOM.Event.MouseEvent#v:eventToMouseEvent).
 
-![Preview](/img/preview.jpg)
+
 
 # Install
 
@@ -33,5 +33,8 @@ Then point your browser to http://localhost:1337/dist/
 
 # History
 
-Tag 1.0.0 - Able to draw shapes on the canvas and listen for clicks
-Tag 1.1.0 - Animating rectangle size with setInterval and requestAnimationFrame
+* Tag 1.0.0 - Able to draw shapes on the canvas and listen for clicks
+
+![Preview](/img/preview.jpg)
+
+* Tag 1.1.0 - Animating rectangle size with setInterval and requestAnimationFrame
