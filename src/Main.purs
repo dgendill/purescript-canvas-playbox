@@ -11,19 +11,24 @@ import Graphics.Canvas (
   setCanvasWidth,
   getCanvasElementById,
   closePath,
-  lineTo,
-  moveTo,
-  strokePath
+  clearRect,
+  strokePath,
+  rect
 )
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import DOM (DOM)
+import DOM.RequestAnimationFrame (requestAnimationFrame)
 import DOM.Event.EventTarget (eventListener, addEventListener)
 import DOM.Event.MouseEvent (clientY, clientX, eventToMouseEvent)
 import DOM.Event.Types (EventTarget, EventType(EventType))
 import Data.Either (Either(Left, Right))
 import Data.Maybe (Maybe(..))
-import Data.Foldable (for_)
+import Control.Monad.Eff.Timer
+
+import Control.Monad.Except (runExcept)
+-- import Control.Monad.Eff.Ref
+import Control.Monad.ST
 
 -- Behind the scenes, CanvasElement is a DOM Element.  So this
 -- foreign function will be passed the canvas element.
@@ -38,25 +43,78 @@ foreign import showCanvas :: forall e. CanvasElement ->
 -- This is the bridge between DOM.Event.Types and Graphics.Canvas.
 foreign import canvasToEventTarget :: CanvasElement -> EventTarget
 
--- Draws a square with a width and height at a certain point
-drawSquare :: forall e. Context2D -> Number -> Number -> Number -> Number -> Eff (canvas :: CANVAS, console :: CONSOLE | e) Context2D
-drawSquare ctx xstart ystart width height = do
+type GameConfig =
+  { gameWidth :: Number
+  , gameHeight :: Number
+  }
+
+type GameState =
+  { w :: Number
+  , h :: Number
+  , x :: Number
+  , y :: Number }
+
+type Game = --Reader GameConfig GameState
+  { config :: GameConfig
+  , state :: GameState }
+
+type GameEff a = forall e. Eff
+                 ( dom :: DOM
+                 , canvas :: CANVAS
+                 , console :: CONSOLE | e) a
+
+clearCanvas :: Context2D -> Game -> GameEff Context2D
+clearCanvas ctx gs = do
+  clearRect ctx { x : 0.0
+                , y : 0.0
+                , w : gs.config.gameWidth
+                , h : gs.config.gameHeight }
+
+drawState :: Context2D -> Game -> GameEff Context2D
+drawState ctx gs = do
+  clearCanvas ctx gs
+
   beginPath ctx
   strokePath ctx $ do
-    moveTo ctx xstart ystart
-    lineTo ctx (xstart + width) ystart
-    lineTo ctx (xstart + width) (ystart + height)
-    lineTo ctx xstart (ystart + height)
+    rect ctx { x : gs.state.x
+             , y : gs.state.y
+             , w : gs.state.w
+             , h : gs.state.h }
     closePath ctx
 
-main :: forall e. Eff (dom :: DOM, canvas :: CANVAS, console :: CONSOLE | e) Unit
+changeBoxSizeBy :: Number -> Game -> Game
+changeBoxSizeBy size g =
+  { state :
+    { w : g.state.w + size
+    , h : g.state.h + size
+    , x : g.state.x
+    , y : g.state.y }
+  , config : g.config }
+
+main :: forall e. Eff
+           ( st :: ST Game
+           , dom :: DOM
+           , timer :: TIMER
+           , canvas :: CANVAS
+           , console :: CONSOLE | e) Unit
 main = do
 
   -- Set Canvas Width and Height and
   -- and the id of the convas element
   let canvasId = "art"
-  let width = 800.0
-  let height = 400.0
+
+  let game = { config :
+                -- Canvas Size
+                { gameWidth : 800.0
+                , gameHeight : 400.0 }
+              , state :
+                -- Initial Postion of Box
+                { w : 10.0
+                , h: 10.0
+                , x : 0.0
+                , y : 0.0 } }
+
+  gameRef <- newSTRef game
 
   -- Attempt to get the canvas
   mcanvas <- getCanvasElementById canvasId
@@ -67,8 +125,8 @@ main = do
       log "We found the canvas, let's draw!"
 
       addEventListener (EventType "click") (eventListener (\e -> do
-        log "Mouse clicked!"
-        case (eventToMouseEvent e) of
+        log "Mouse clicked  !"
+        case (runExcept $ eventToMouseEvent e) of
           (Right event) ->
             log (show (clientX event) <> "," <> show (clientY event))
           (Left event) ->
@@ -76,21 +134,14 @@ main = do
 
       )) false (canvasToEventTarget canvas)
 
-      -- Set width and height of canvas
-      -- and get the context
-      setCanvasWidth width canvas
-      setCanvasHeight height canvas
       ctx <- getContext2D canvas
+      setCanvasWidth game.config.gameWidth canvas
+      setCanvasHeight game.config.gameHeight canvas
 
-      -- Draw a square around the canvas bounds
-      drawSquare ctx 0.0 0.0 width height
-
-      -- Draw some squares
-      drawSquare ctx 10.0 10.0 10.0 10.0
-      drawSquare ctx 30.0 30.0 20.0 20.0
-
-      for_ [7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0] \n -> do
-        drawSquare ctx (100.0 + n * 20.0) (50.0) n n
+      setInterval 60 $ requestAnimationFrame $ do
+        g <- modifySTRef gameRef (changeBoxSizeBy 1.0)
+        log $ show g.state.w
+        drawState ctx g
 
       log ""
 
